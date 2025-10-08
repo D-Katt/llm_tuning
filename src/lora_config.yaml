@@ -1,0 +1,85 @@
+base_model: t-tech/T-pro-it-1.0
+# load_in_4bit: true
+load_in_8bit: true
+trust_remote_code: true
+model_type: AutoModelForCausalLM
+tokenizer_type: AutoTokenizer
+torch_dtype: bfloat16                  
+
+adapter: lora
+lora_r: 128
+lora_alpha: 256
+lora_dropout: 0.2
+lora_target_modules:
+  - q_proj
+  - k_proj
+  - v_proj
+  - o_proj
+  - gate_proj
+  - up_proj
+  - down_proj
+
+chat_template: tokenizer_default
+
+datasets:
+  - path: data/train_dataset.json
+    type: chat_template
+    ds_type: json
+    chat_template: tokenizer_default
+
+test_datasets:
+  - path: data/val_dataset.json
+    type: chat_template
+    ds_type: json
+    split: train 
+    chat_template: tokenizer_default
+
+sequence_len: 2048
+
+num_epochs: 2
+micro_batch_size: 1
+gradient_accumulation_steps: 32
+optimizer: adamw_torch
+weight_decay: 0.1
+learning_rate: 1e-5
+lr_scheduler: cosine
+bf16: true 
+warmup_ratio: 0.15
+max_grad_norm: 1.0
+
+# fsdp:
+#   - full_shard
+#   - auto_wrap
+
+# fsdp_config:
+#   xla: true
+#   fsdp_offload_params: false
+#   fsdp_state_dict_type: FULL_STATE_DICT
+#   fsdp_transformer_layer_cls_to_wrap: Qwen2DecoderLayer
+#   fsdp_backward_prefetch: backward_pre
+#   fsdp_forward_prefetch: false
+#   fsdp_use_orig_params: true
+#   fsdp_cpu_ram_efficient_loading: true
+#   fsdp_sync_module_states: true
+#   # fsdp_activation_checkpointing: true  
+
+gradient_checkpointing: true
+gradient_checkpointing_kwargs:
+  use_reentrant: false
+# activation_offloading: true
+
+eval_steps: 0.1
+# eval_strategy: epoch
+
+save_steps: 0.1
+# save_strategy: epoch
+
+logging_steps: 32
+early_stopping_patience: 3
+metric_for_best_model: eval_loss
+load_best_model_at_end: true
+
+output_dir: ./best_cp
+checkpoint_dir: ./runs/ckpts
+
+save_total_limit: 10
